@@ -3,6 +3,8 @@ var SVG = document.createElementNS("http://www.w3.org/2000/svg","svg");
 SVG.setAttribute('version','1.1');
 SVG.setAttribute('width','100%');
 SVG.setAttribute('height','900px');
+var max_x;
+var max_y;
 
 var color = new Array();
 color[0] = 'red';
@@ -11,11 +13,28 @@ color[2] = 'yellow';
 color[3] = 'green';
 color[4] = 'orange';
 
-circle_xy = new Array();
 var mouseXY = new Object();
 
+var speed = 40;
+var radio = 20;
+var bodylength = 5;
+var snakenum = 3;
 
-function create_circle(cx, cy, r, stroke, stroke_width, gost){
+circle_xy = new Array();
+
+for (var i = 0; i < snakenum; i++){
+    circle_xy[i]=new Array();
+}
+
+// var map = new Array();
+// for(var i = 0; i < 1920; i++){
+//     map[i] = new Array();
+//     for (var j = 0;j < 1080; j++){
+//         map[i][j] = '';
+//     }
+// }
+
+function create_circle(cx, cy, r, stroke, stroke_width, gost, head){
     var circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
     circle.setAttribute('cx',cx);
     circle.setAttribute('cy',cy);
@@ -37,7 +56,7 @@ function move_circle(cx, cy, circle){
     circle.setAttribute('cy',cy);
 }
 
-function create_snake(){
+function create_snake(num){
     // var origin_circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
     // var origin_cx = Math.floor(Math.random()*1000+20);
     // var origin_cy = Math.floor(Math.random()*800+20);
@@ -50,40 +69,88 @@ function create_snake(){
     // SVG.append(origin_circle);
     max_x=SVG.getBoundingClientRect().width;
     max_y=SVG.getBoundingClientRect().height;
-    circle_xy[0] = create_circle(Math.floor(Math.random()*(max_x-210)+200), Math.floor(Math.random()*(max_y-210)+200), 20, 'black', '2px', false);
-    var i = 1;
-    var coefficient = circle_xy[0].x<Math.floor(max_x/2) ? 1 : -1;
-    for (i = 1;i <= 5;i ++){
-        circle_xy[i]=create_circle(circle_xy[i-1].x+(coefficient*40), circle_xy[i-1].y, 20, false);
+    circle_xy[num][0] = create_circle(Math.floor(Math.random()*(max_x-radio+1)+radio), Math.floor(Math.random()*(max_y-radio+1)+radio), radio, 'black', '2px', false);
+    // for(var i = Math.floor(circle_xy[num][0].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radio*0.7; i <= Math.floor(circle_xy[num][0].x)+radio*0.7; i++){
+    //     for(var j = Math.floor(circle_xy[num][0].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radio*0.7; j <= Math.floor(circle_xy[num][0].y)+radio*0.7; j++){
+    //         map[i][j] = num;
+    //     }
+    // }
+    var coefficient = circle_xy[num][0].x<Math.floor(max_x/2) ? 1 : -1;
+    for (var i = 1;i <= bodylength;i ++){
+        circle_xy[num][i]=create_circle(circle_xy[num][i-1].x+(coefficient*speed), circle_xy[num][i-1].y, radio, false);
+        // for(var k = Math.floor(circle_xy[num][i].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][i].x)-radio*0.7; k <= Math.floor(circle_xy[num][i].x)+radio*0.7; k++){
+        //     for(var j = Math.floor(circle_xy[num][i].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][i].y)-radio*0.7; j <= Math.floor(circle_xy[num][i].y)+radio*0.7; j++){
+        //         map[k][j] = num;
+        //     }
+        // }
     }
 
 }
 
-function movtion(){
-    console.log(mouseXY);
+function movtion(num){
+    judege_border(num);
+    judege_collision(circle_xy[num][0], circle_xy[1]);
     var vector = new Object();
-    var length = Math.sqrt(Math.pow((mouseXY.X - circle_xy[0].x), 2) + Math.pow((mouseXY.Y - circle_xy[0].y),2));
-    vector.X = (mouseXY.X - circle_xy[0].x)/length;
-    vector.Y = (mouseXY.Y - circle_xy[0].y)/length;
-    for (i = 5;i > 0;i --){
-        move_circle(circle_xy[i-1].x, circle_xy[i-1].y, circle_xy[i].circle);
-        circle_xy[i].x = circle_xy[i-1].x;
-        circle_xy[i].y = circle_xy[i-1].y;
+    var length = Math.sqrt(Math.pow((mouseXY.X - circle_xy[num][0].x), 2) + Math.pow((mouseXY.Y - circle_xy[num][0].y),2));
+    vector.X = (mouseXY.X - circle_xy[num][0].x)/length;
+    vector.Y = (mouseXY.Y - circle_xy[num][0].y)/length;
+    // for(var k = Math.floor(circle_xy[num][bodylength].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][bodylength].x)-radio*0.7; k <= Math.floor(circle_xy[num][bodylength].x)+radio*0.7; k++){
+    //     for(var j = Math.floor(circle_xy[num][bodylength].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][bodylength].y)-radio*0.7; j <= Math.floor(circle_xy[num][bodylength].y)+radio*0.7; j++){
+    //         map[k][j] = '';
+    //     }
+    // }
+    for (i = bodylength;i > 0;i --){
+        move_circle(circle_xy[num][i-1].x, circle_xy[num][i-1].y, circle_xy[num][i].circle);
+        circle_xy[num][i].x = circle_xy[num][i-1].x;
+        circle_xy[num][i].y = circle_xy[num][i-1].y;
     }
-    move_circle(circle_xy[0].x+(vector.X)*40, circle_xy[0].y+(vector.Y)*40, circle_xy[0].circle);
-    circle_xy[0].x = circle_xy[0].x+(vector.X)*40;
-    circle_xy[0].y = circle_xy[0].y+(vector.Y)*40;
+    move_circle(circle_xy[num][0].x+(vector.X)*speed, circle_xy[num][0].y+(vector.Y)*speed, circle_xy[num][0].circle);
+    circle_xy[num][0].x = circle_xy[num][0].x+(vector.X)*speed;
+    circle_xy[num][0].y = circle_xy[num][0].y+(vector.Y)*speed;
+    // for(var i = Math.floor(circle_xy[num][0].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radio*0.7; i <= Math.floor(circle_xy[num][0].x)+radio*0.7; i++){
+    //     for(var j = Math.floor(circle_xy[num][0].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radio*0.7; j <= Math.floor(circle_xy[num][0].y)+radio*0.7; j++){
+    //         if(map[i][j] != num){
+    //             alert('game over!');
+    //             location.reload();
+    //             return false;
+    //         }
+    //         else {
+    //             map[i][j] = num;
+    //         }
+    //     }
+    // }
+
 }
+
+function judege_border(num){
+    if (circle_xy[num][0].x <= radio || circle_xy[num][0].y <= radio ||circle_xy[num][0].x >= max_x-radio || circle_xy[num][0].y >= max_y-radio){
+        alert('game over!');
+        location.reload();
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+function judege_collision(snake_me_head, snake_other_body) {
+    for(var i = 0; i < snake_other_body.length; i++){
+        if(Math.pow((snake_other_body[i].x - snake_me_head.x), 2)+Math.pow((snake_other_body[i].y - snake_me_head.y), 2) <= 1600){
+            alert('game over!CC');
+            location.reload();
+            return false;
+        }
+    }
+}
+
 
 $(document).ready(function(){
     $('body').append(SVG);
-    create_snake();
-
-    $(document).mousemove(function(e){
+    create_snake(0);
+    create_snake(1);
+    $('body').mousemove(function(e){
         mouseXY.X = e.pageX;
         mouseXY.Y = e.pageY;
     });
-
-    setInterval(movtion, 100);
-
+    setInterval(function(){movtion(0);}, 100);
 });
