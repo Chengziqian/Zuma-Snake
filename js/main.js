@@ -16,8 +16,8 @@ color[4] = 'orange';
 var mouseXY = new Object();
 var vector_num = new Array();
 
-var speed = 40;
-var radio = 20;
+var speed = 4;
+var radius = 20;
 var bodylength = 5;
 var snakenum = 3;
 
@@ -70,17 +70,17 @@ function create_snake(num){
     // SVG.append(origin_circle);
     max_x=SVG.getBoundingClientRect().width;
     max_y=SVG.getBoundingClientRect().height;
-    circle_xy[num][0] = create_circle(Math.floor(Math.random()*(max_x-radio+1)+radio), Math.floor(Math.random()*(max_y-radio+1)+radio), radio, 'black', '2px', false);
-    // for(var i = Math.floor(circle_xy[num][0].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radio*0.7; i <= Math.floor(circle_xy[num][0].x)+radio*0.7; i++){
-    //     for(var j = Math.floor(circle_xy[num][0].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radio*0.7; j <= Math.floor(circle_xy[num][0].y)+radio*0.7; j++){
+    circle_xy[num][0] = create_circle(Math.floor(Math.random()*(max_x-radius+1)+radius), Math.floor(Math.random()*(max_y-radius+1)+radius), radius, 'black', '2px', false);
+    // for(var i = Math.floor(circle_xy[num][0].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radius*0.7; i <= Math.floor(circle_xy[num][0].x)+radius*0.7; i++){
+    //     for(var j = Math.floor(circle_xy[num][0].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radius*0.7; j <= Math.floor(circle_xy[num][0].y)+radius*0.7; j++){
     //         map[i][j] = num;
     //     }
     // }
     var coefficient = circle_xy[num][0].x<Math.floor(max_x/2) ? 1 : -1;
     for (var i = 1;i <= bodylength;i ++){
-        circle_xy[num][i]=create_circle(circle_xy[num][i-1].x+(coefficient*speed), circle_xy[num][i-1].y, radio, false);
-        // for(var k = Math.floor(circle_xy[num][i].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][i].x)-radio*0.7; k <= Math.floor(circle_xy[num][i].x)+radio*0.7; k++){
-        //     for(var j = Math.floor(circle_xy[num][i].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][i].y)-radio*0.7; j <= Math.floor(circle_xy[num][i].y)+radio*0.7; j++){
+        circle_xy[num][i]=create_circle(circle_xy[num][i-1].x+(coefficient*radius*2), circle_xy[num][i-1].y, radius, false);
+        // for(var k = Math.floor(circle_xy[num][i].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][i].x)-radius*0.7; k <= Math.floor(circle_xy[num][i].x)+radius*0.7; k++){
+        //     for(var j = Math.floor(circle_xy[num][i].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][i].y)-radius*0.7; j <= Math.floor(circle_xy[num][i].y)+radius*0.7; j++){
         //         map[k][j] = num;
         //     }
         // }
@@ -106,22 +106,26 @@ function movtion(num){
     judege_border(num);
     judege_collision(circle_xy[num][0], circle_xy[1]);
 
-    // for(var k = Math.floor(circle_xy[num][bodylength].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][bodylength].x)-radio*0.7; k <= Math.floor(circle_xy[num][bodylength].x)+radio*0.7; k++){
-    //     for(var j = Math.floor(circle_xy[num][bodylength].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][bodylength].y)-radio*0.7; j <= Math.floor(circle_xy[num][bodylength].y)+radio*0.7; j++){
+    // for(var k = Math.floor(circle_xy[num][bodylength].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][bodylength].x)-radius*0.7; k <= Math.floor(circle_xy[num][bodylength].x)+radius*0.7; k++){
+    //     for(var j = Math.floor(circle_xy[num][bodylength].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][bodylength].y)-radius*0.7; j <= Math.floor(circle_xy[num][bodylength].y)+radius*0.7; j++){
     //         map[k][j] = '';
     //     }
     // }
-    for (i = bodylength;i > 0;i --){
-        move_circle(circle_xy[num][i-1].x, circle_xy[num][i-1].y, circle_xy[num][i].circle);
-        circle_xy[num][i].x = circle_xy[num][i-1].x;
-        circle_xy[num][i].y = circle_xy[num][i-1].y;
-    }
+
     circle_xy[num][0].x = circle_xy[num][0].x+(vector_num[num].X)*speed;
     circle_xy[num][0].y = circle_xy[num][0].y+(vector_num[num].Y)*speed;
     move_circle(circle_xy[num][0].x, circle_xy[num][0].y, circle_xy[num][0].circle);
+    for (i = 1;i <= bodylength;i ++){
+        var L = Math.sqrt(Math.pow(circle_xy[num][i-1].x - circle_xy[num][i].x, 2) + Math.pow(circle_xy[num][i-1].y - circle_xy[num][i].y, 2));
+        var new_X = (1 - 2 * radius / L) * circle_xy[num][i-1].x + (2 * radius / L) * circle_xy[num][i].x;
+        var new_Y = (1 - 2 * radius / L) * circle_xy[num][i-1].y + (2 * radius / L) * circle_xy[num][i].y;
+        move_circle(new_X, new_Y, circle_xy[num][i].circle);
+        circle_xy[num][i].x = new_X;
+        circle_xy[num][i].y = new_Y;
+    }
 
-    // for(var i = Math.floor(circle_xy[num][0].x)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radio*0.7; i <= Math.floor(circle_xy[num][0].x)+radio*0.7; i++){
-    //     for(var j = Math.floor(circle_xy[num][0].y)-radio*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radio*0.7; j <= Math.floor(circle_xy[num][0].y)+radio*0.7; j++){
+    // for(var i = Math.floor(circle_xy[num][0].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radius*0.7; i <= Math.floor(circle_xy[num][0].x)+radius*0.7; i++){
+    //     for(var j = Math.floor(circle_xy[num][0].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radius*0.7; j <= Math.floor(circle_xy[num][0].y)+radius*0.7; j++){
     //         if(map[i][j] != num){
     //             alert('game over!');
     //             location.reload();
@@ -136,7 +140,7 @@ function movtion(num){
 }
 
 function judege_border(num){
-    if (circle_xy[num][0].x <= radio || circle_xy[num][0].y <= radio ||circle_xy[num][0].x >= max_x-radio || circle_xy[num][0].y >= max_y-radio){
+    if (circle_xy[num][0].x <= radius || circle_xy[num][0].y <= radius ||circle_xy[num][0].x >= max_x-radius || circle_xy[num][0].y >= max_y-radius){
         alert('game over!');
         location.reload();
         return false;
@@ -148,7 +152,7 @@ function judege_border(num){
 
 function judege_collision(snake_me_head, snake_other_body) {
     for(var i = 0; i < snake_other_body.length; i++){
-        if(Math.pow((snake_other_body[i].x - snake_me_head.x), 2)+Math.pow((snake_other_body[i].y - snake_me_head.y), 2) <= 1600){
+        if(Math.pow((snake_other_body[i].x - snake_me_head.x), 2)+Math.pow((snake_other_body[i].y - snake_me_head.y), 2) <= Math.pow(2*radius,2)){
             alert('game over!CC');
             location.reload();
             return false;
@@ -168,5 +172,5 @@ $(document).ready(function(){
         mouseXY.Y = e.pageY;
         calcuate_vector(0);
     });
-    setInterval(function(){movtion(0);}, 100);
+    setInterval(function(){movtion(0);}, 10);
 });
