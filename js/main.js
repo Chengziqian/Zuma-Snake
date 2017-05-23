@@ -16,10 +16,11 @@ color[4] = 'orange';
 var mouseXY = new Object();
 var vector_num = new Array();
 
-var speed = 4;
+var speed = 7;
 var radius = 20;
-var bodylength = 5;
+var bodylength = 10;
 var snakenum = 3;
+var int;
 
 circle_xy = new Array();
 
@@ -103,26 +104,37 @@ function calcuate_vector(num) {
 }
 
 function movtion(num){
-    judege_border(num);
-    judege_collision(circle_xy[num][0], circle_xy[1]);
 
     // for(var k = Math.floor(circle_xy[num][bodylength].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][bodylength].x)-radius*0.7; k <= Math.floor(circle_xy[num][bodylength].x)+radius*0.7; k++){
     //     for(var j = Math.floor(circle_xy[num][bodylength].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][bodylength].y)-radius*0.7; j <= Math.floor(circle_xy[num][bodylength].y)+radius*0.7; j++){
     //         map[k][j] = '';
     //     }
     // }
-
+    old_x = circle_xy[num][0].x;
+    old_y = circle_xy[num][0].y;
     circle_xy[num][0].x = circle_xy[num][0].x+(vector_num[num].X)*speed;
     circle_xy[num][0].y = circle_xy[num][0].y+(vector_num[num].Y)*speed;
     move_circle(circle_xy[num][0].x, circle_xy[num][0].y, circle_xy[num][0].circle);
     for (i = 1;i <= bodylength;i ++){
-        var L = Math.sqrt(Math.pow(circle_xy[num][i-1].x - circle_xy[num][i].x, 2) + Math.pow(circle_xy[num][i-1].y - circle_xy[num][i].y, 2));
-        var new_X = (1 - 2 * radius / L) * circle_xy[num][i-1].x + (2 * radius / L) * circle_xy[num][i].x;
-        var new_Y = (1 - 2 * radius / L) * circle_xy[num][i-1].y + (2 * radius / L) * circle_xy[num][i].y;
-        move_circle(new_X, new_Y, circle_xy[num][i].circle);
+        // var L = Math.sqrt(Math.pow(circle_xy[num][i-1].x - circle_xy[num][i].x, 2) + Math.pow(circle_xy[num][i-1].y - circle_xy[num][i].y, 2));
+        // var new_X = (1 - 2 * radius / L) * circle_xy[num][i-1].x + (2 * radius / L) * circle_xy[num][i].x;
+        // var new_Y = (1 - 2 * radius / L) * circle_xy[num][i-1].y + (2 * radius / L) * circle_xy[num][i].y;
+        var d1_2 = Math.pow(old_x - circle_xy[num][i-1].x ,2) + Math.pow(old_y - circle_xy[num][i-1].y ,2);
+        var d2_2 = Math.pow(circle_xy[num][i].x - circle_xy[num][i-1].x ,2) + Math.pow(circle_xy[num][i].y - circle_xy[num][i-1].y ,2);
+        var s = (circle_xy[num][i-1].x - old_x) * (circle_xy[num][i-1].x - circle_xy[num][i].x) + (circle_xy[num][i-1].y - old_y) * (circle_xy[num][i-1].y - circle_xy[num][i].y);
+        var lamda = ((d1_2 - s) + Math.sqrt(4*radius*radius*d2_2 + 4*radius*radius*d1_2 - d1_2+d2_2 +s*s -8*s*radius*radius))/(d1_2 + d2_2 - 2*s);
+        console.log(lamda);
+        var new_X = lamda*(circle_xy[num][i].x - old_x) + old_x;
+        var new_Y = lamda*(circle_xy[num][i].y - old_y) + old_y;
+        old_x = circle_xy[num][i].x;
+        old_y = circle_xy[num][i].y;
         circle_xy[num][i].x = new_X;
         circle_xy[num][i].y = new_Y;
+        move_circle(new_X, new_Y, circle_xy[num][i].circle);
     }
+
+    var j1 = judege_border(num);
+    var j2 = judege_collision(circle_xy[num][0], circle_xy[1]);
 
     // for(var i = Math.floor(circle_xy[num][0].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radius*0.7; i <= Math.floor(circle_xy[num][0].x)+radius*0.7; i++){
     //     for(var j = Math.floor(circle_xy[num][0].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radius*0.7; j <= Math.floor(circle_xy[num][0].y)+radius*0.7; j++){
@@ -136,12 +148,15 @@ function movtion(num){
     //         }
     //     }
     // }
+    requestAnimationFrame(function(){
+        movtion(num);
+    });
 
 }
-
 function judege_border(num){
     if (circle_xy[num][0].x <= radius || circle_xy[num][0].y <= radius ||circle_xy[num][0].x >= max_x-radius || circle_xy[num][0].y >= max_y-radius){
-        alert('game over!');
+        clearInterval(int);
+        //alert('game over!');
         location.reload();
         return false;
     }
@@ -153,7 +168,8 @@ function judege_border(num){
 function judege_collision(snake_me_head, snake_other_body) {
     for(var i = 0; i < snake_other_body.length; i++){
         if(Math.pow((snake_other_body[i].x - snake_me_head.x), 2)+Math.pow((snake_other_body[i].y - snake_me_head.y), 2) <= Math.pow(2*radius,2)){
-            alert('game over!CC');
+            clearInterval(int);
+            //alert('game over!CC');
             location.reload();
             return false;
         }
@@ -172,5 +188,13 @@ $(document).ready(function(){
         mouseXY.Y = e.pageY;
         calcuate_vector(0);
     });
-    setInterval(function(){movtion(0);}, 10);
+    // var int = setInterval(function(){
+    //     var judge = movtion(0);
+    // }, 10);
+    // window.requestAnimationFrame(function(){
+    //     movtion(0);
+    // });
+    requestAnimationFrame(function(){
+        movtion(0);
+    });
 });
