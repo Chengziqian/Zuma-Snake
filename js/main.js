@@ -5,6 +5,7 @@ SVG.setAttribute('width','100%');
 SVG.setAttribute('height','900px');
 var max_x;
 var max_y;
+var flag = 1;
 
 var color = new Array();
 color[0] = 'red';
@@ -15,17 +16,25 @@ color[4] = 'orange';
 
 var mouseXY = new Object();
 var vector_num = new Array();
+var snake_bone = new Array();
 
-var speed = 7;
-var radius = 20;
+
+var gost_bone = new Array();
+
+
+var speed = 3;
+var radius = 18;
 var bodylength = 10;
 var snakenum = 3;
+var jump = radius/speed;
 var int;
 
 circle_xy = new Array();
 
 for (var i = 0; i < snakenum; i++){
     circle_xy[i]=new Array();
+    snake_bone[i]=new Array();
+    snake_bone[i]=new Array();
 }
 
 // var map = new Array();
@@ -36,7 +45,31 @@ for (var i = 0; i < snakenum; i++){
 //     }
 // }
 
-function create_circle(cx, cy, r, stroke, stroke_width, gost, head){
+function CreateSnakeBone (num){
+    snake_bone[num][0] = new Object();
+    snake_bone[num][0].x = Math.random()*(max_x-2*radius+1)+radius;
+    snake_bone[num][0].y = Math.random()*(max_y-2*radius+1)+radius;
+    console.log(max_y);
+    console.log(max_x);
+    snake_bone[num][0].status = 1;
+    circle_xy[num][0]=CreateCircle(snake_bone[num][0].x, snake_bone[num][0].y, radius, 'black', '2px', false);
+    var bone_point = jump + (bodylength - 1) * 2 * jump;
+    var coefficient = circle_xy[num][0].x<Math.floor(max_x/2) ? 1 : -1;
+    for (var i = 1; i <= bone_point; i++) {
+        snake_bone[num][i] = new Object();
+        snake_bone[num][i].x = snake_bone[num][i-1].x + coefficient * speed;
+        snake_bone[num][i].y = snake_bone[num][i-1].y;
+        if (i%(2 * jump) == 0){
+            snake_bone[num][i].status = 1;
+        }
+        else {
+            snake_bone[num][i].status = 0;
+        }
+    }
+
+}
+
+function CreateCircle(cx, cy, r, stroke, stroke_width, gost, head){
     var circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
     circle.setAttribute('cx',cx);
     circle.setAttribute('cy',cy);
@@ -53,108 +86,62 @@ function create_circle(cx, cy, r, stroke, stroke_width, gost, head){
     return xy;
 }
 
-function move_circle(cx, cy, circle){
+function MoveCircle(cx, cy, circle){
     circle.setAttribute('cx',cx);
     circle.setAttribute('cy',cy);
 }
 
-function create_snake(num){
-    // var origin_circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    // var origin_cx = Math.floor(Math.random()*1000+20);
-    // var origin_cy = Math.floor(Math.random()*800+20);
-    // origin_circle.setAttribute('cx',origin_cx);
-    // origin_circle.setAttribute('cy',origin_cy);
-    // origin_circle.setAttribute('r','18');
-    // origin_circle.setAttribute('fill',color[random_color]);
-    // origin_circle.setAttribute('stroke','orange');
-    // origin_circle.setAttribute('stroke-width','2px');
-    // SVG.append(origin_circle);
-    max_x=SVG.getBoundingClientRect().width;
-    max_y=SVG.getBoundingClientRect().height;
-    circle_xy[num][0] = create_circle(Math.floor(Math.random()*(max_x-radius+1)+radius), Math.floor(Math.random()*(max_y-radius+1)+radius), radius, 'black', '2px', false);
-    // for(var i = Math.floor(circle_xy[num][0].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radius*0.7; i <= Math.floor(circle_xy[num][0].x)+radius*0.7; i++){
-    //     for(var j = Math.floor(circle_xy[num][0].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radius*0.7; j <= Math.floor(circle_xy[num][0].y)+radius*0.7; j++){
-    //         map[i][j] = num;
-    //     }
-    // }
-    var coefficient = circle_xy[num][0].x<Math.floor(max_x/2) ? 1 : -1;
-    for (var i = 1;i <= bodylength;i ++){
-        circle_xy[num][i]=create_circle(circle_xy[num][i-1].x+(coefficient*radius*2), circle_xy[num][i-1].y, radius, false);
-        // for(var k = Math.floor(circle_xy[num][i].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][i].x)-radius*0.7; k <= Math.floor(circle_xy[num][i].x)+radius*0.7; k++){
-        //     for(var j = Math.floor(circle_xy[num][i].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][i].y)-radius*0.7; j <= Math.floor(circle_xy[num][i].y)+radius*0.7; j++){
-        //         map[k][j] = num;
-        //     }
-        // }
+function CreateSnake(num){
+    for (var k = 1;k < snake_bone[num].length; k++){
+        if (snake_bone[num][k].status == 1) {
+            circle_xy[num][k/(2*jump)]=CreateCircle(snake_bone[num][k].x, snake_bone[num][k].y, radius, false);
+        }
     }
-
 }
-function origin_vector(num){
+function OriginVector(num){
     var vector = new Object();
-    vector.X = Math.random();
-    vector.Y = Math.sqrt(1-Math.pow(vector.X,2));
+    // vector.X = Math.random();
+    // vector.Y = Math.sqrt(1-Math.pow(vector.X,2));
+    vector.X = 1;
+    vector.Y = 0;
     vector_num[num] = vector;
 }
 
-function calcuate_vector(num) {
+function CalculateVector(num) {
     var vector = new Object();
-    var length = Math.sqrt(Math.pow((mouseXY.X - circle_xy[0][0].x), 2) + Math.pow((mouseXY.Y - circle_xy[num][0].y),2));
-    vector.X = (mouseXY.X - circle_xy[num][0].x)/length;
-    vector.Y = (mouseXY.Y - circle_xy[num][0].y)/length;
+    var length = Math.sqrt(Math.pow((mouseXY.X - snake_bone[num][0].x), 2) + Math.pow((mouseXY.Y - snake_bone[num][0].y),2));
+    vector.X = (mouseXY.X - snake_bone[num][0].x)/length;
+    vector.Y = (mouseXY.Y - snake_bone[num][0].y)/length;
     vector_num[num] = vector;
 }
 
-function movtion(num){
-
-    // for(var k = Math.floor(circle_xy[num][bodylength].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][bodylength].x)-radius*0.7; k <= Math.floor(circle_xy[num][bodylength].x)+radius*0.7; k++){
-    //     for(var j = Math.floor(circle_xy[num][bodylength].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][bodylength].y)-radius*0.7; j <= Math.floor(circle_xy[num][bodylength].y)+radius*0.7; j++){
-    //         map[k][j] = '';
-    //     }
-    // }
-    old_x = circle_xy[num][0].x;
-    old_y = circle_xy[num][0].y;
-    circle_xy[num][0].x = circle_xy[num][0].x+(vector_num[num].X)*speed;
-    circle_xy[num][0].y = circle_xy[num][0].y+(vector_num[num].Y)*speed;
-    move_circle(circle_xy[num][0].x, circle_xy[num][0].y, circle_xy[num][0].circle);
-    for (i = 1;i <= bodylength;i ++){
-        // var L = Math.sqrt(Math.pow(circle_xy[num][i-1].x - circle_xy[num][i].x, 2) + Math.pow(circle_xy[num][i-1].y - circle_xy[num][i].y, 2));
-        // var new_X = (1 - 2 * radius / L) * circle_xy[num][i-1].x + (2 * radius / L) * circle_xy[num][i].x;
-        // var new_Y = (1 - 2 * radius / L) * circle_xy[num][i-1].y + (2 * radius / L) * circle_xy[num][i].y;
-        var d1_2 = Math.pow(old_x - circle_xy[num][i-1].x ,2) + Math.pow(old_y - circle_xy[num][i-1].y ,2);
-        var d2_2 = Math.pow(circle_xy[num][i].x - circle_xy[num][i-1].x ,2) + Math.pow(circle_xy[num][i].y - circle_xy[num][i-1].y ,2);
-        var s = (circle_xy[num][i-1].x - old_x) * (circle_xy[num][i-1].x - circle_xy[num][i].x) + (circle_xy[num][i-1].y - old_y) * (circle_xy[num][i-1].y - circle_xy[num][i].y);
-        var lamda = ((d1_2 - s) + Math.sqrt(4*radius*radius*d2_2 + 4*radius*radius*d1_2 - d1_2+d2_2 +s*s -8*s*radius*radius))/(d1_2 + d2_2 - 2*s);
-        console.log(lamda);
-        var new_X = lamda*(circle_xy[num][i].x - old_x) + old_x;
-        var new_Y = lamda*(circle_xy[num][i].y - old_y) + old_y;
-        old_x = circle_xy[num][i].x;
-        old_y = circle_xy[num][i].y;
-        circle_xy[num][i].x = new_X;
-        circle_xy[num][i].y = new_Y;
-        move_circle(new_X, new_Y, circle_xy[num][i].circle);
+function Movtion(num){
+    for (var k = snake_bone[num].length - 1;k > 0; k--) {
+        snake_bone[num][k].x = snake_bone[num][k-1].x;
+        snake_bone[num][k].y = snake_bone[num][k-1].y;
+        if (snake_bone[num][k].status == 1){
+            circle_xy[num][k/(2 * jump)].x = snake_bone[num][k].x;
+            circle_xy[num][k/(2 * jump)].y = snake_bone[num][k].y;
+            MoveCircle(snake_bone[num][k].x, snake_bone[num][k].y, circle_xy[num][k/(2 * jump)].circle);
+        }
     }
+    snake_bone[num][0].x += (vector_num[num].X)*speed;
+    snake_bone[num][0].y += (vector_num[num].Y)*speed;
+    circle_xy[num][0].x = snake_bone[num][0].x;
+    circle_xy[num][0].y = snake_bone[num][0].y;
+    MoveCircle(snake_bone[num][0].x, snake_bone[num][0].y, circle_xy[num][0].circle);
 
     var j1 = judege_border(num);
     var j2 = judege_collision(circle_xy[num][0], circle_xy[1]);
 
-    // for(var i = Math.floor(circle_xy[num][0].x)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].x)-radius*0.7; i <= Math.floor(circle_xy[num][0].x)+radius*0.7; i++){
-    //     for(var j = Math.floor(circle_xy[num][0].y)-radius*0.7<=0?0:Math.floor(circle_xy[num][0].y)-radius*0.7; j <= Math.floor(circle_xy[num][0].y)+radius*0.7; j++){
-    //         if(map[i][j] != num){
-    //             alert('game over!');
-    //             location.reload();
-    //             return false;
-    //         }
-    //         else {
-    //             map[i][j] = num;
-    //         }
-    //     }
-    // }
+
     requestAnimationFrame(function(){
-        movtion(num);
+        Movtion(num);
     });
 
 }
 function judege_border(num){
-    if (circle_xy[num][0].x <= radius || circle_xy[num][0].y <= radius ||circle_xy[num][0].x >= max_x-radius || circle_xy[num][0].y >= max_y-radius){
+    if (snake_bone[num][0].x <= radius || snake_bone[num][0].y <= radius ||snake_bone[num][0].x >= max_x-radius || snake_bone[num][0].y >= max_y-radius){
         clearInterval(int);
         //alert('game over!');
         location.reload();
@@ -179,22 +166,27 @@ function judege_collision(snake_me_head, snake_other_body) {
 
 $(document).ready(function(){
     $('body').append(SVG);
-    origin_vector(0);
-    console.log(vector_num[0]);
-    create_snake(0);
-    create_snake(1);
+    max_x=SVG.getBoundingClientRect().width;
+    max_y=SVG.getBoundingClientRect().height;
+    OriginVector(0);
+    CreateSnakeBone(0);
+    CreateSnake(0);
+    CreateSnakeBone(1);
+    CreateSnake(1);
+    // console.log(snake_bone);
     $('body').mousemove(function(e){
         mouseXY.X = e.pageX;
         mouseXY.Y = e.pageY;
-        calcuate_vector(0);
+        CalculateVector(0);
     });
     // var int = setInterval(function(){
-    //     var judge = movtion(0);
+    //     var judge = Movtion(0);
     // }, 10);
     // window.requestAnimationFrame(function(){
-    //     movtion(0);
+    //     Movtion(0);
     // });
+
     requestAnimationFrame(function(){
-        movtion(0);
+        Movtion(0);
     });
 });
